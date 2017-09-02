@@ -1,5 +1,7 @@
 static/admin/
 static/rest_framework/
+assets/bundles/
+webpack-stats.json
 
 # Created by https://www.gitignore.io/api/node
 
