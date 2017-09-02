@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings
 from os.path import stat
+from cms.urls import router as cms_router
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^cms/', include('cms.urls', namespace='cms')),
+    url(r'^api/', include(cms_router.urls)),
 ]
