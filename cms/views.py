@@ -3,6 +3,10 @@ from django.http import HttpResponse
 from django.views.generic.list import ListView
 from cms.models import Book, Impression
 from cms.forms import BookForm, ImpressionForm
+import django_filters
+from rest_framework import viewsets, filters
+from .models import Book, Impression
+from .serializer import BookSerializer, ImpressionSerializer
 
 
 def book_list(request):
@@ -78,3 +82,11 @@ def impression_del(request, book_id, impression_id):
     impression.delete()
     return redirect('cms:impression_list', book_id=book_id)
 
+
+class BookViewSet(viewsets.ModelViewSet):
+    queryset = Book.objects.all()
+    serializer_class = BookSerializer
+    
+class ImpressionViewSet(viewsets.ModelViewSet):
+    queryset = Impression.objects.all()
+    serializer_class = ImpressionSerializer

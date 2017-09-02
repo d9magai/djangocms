@@ -1,5 +1,7 @@
 from django.conf.urls import url
 from cms import views
+from rest_framework import routers
+from .views import BookViewSet, ImpressionViewSet
 
 urlpatterns = [
     # 書籍
@@ -13,3 +15,8 @@ urlpatterns = [
     url(r'^impression/mod/(?P<book_id>\d+)/(?P<impression_id>\d+)/$', views.impression_edit, name='impression_mod'),  # 修正
     url(r'^impression/del/(?P<book_id>\d+)/(?P<impression_id>\d+)/$', views.impression_del, name='impression_del'),   # 削除
 ]
+
+
+router = routers.DefaultRouter()
+router.register(r'book', BookViewSet)
+router.register(r'imporession', ImpressionViewSet)
