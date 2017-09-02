@@ -1,0 +1,25 @@
+{
+  "name": "djangocms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/d9magai/djangocms.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/d9magai/djangocms/issues"
+  },
+  "homepage": "https://github.com/d9magai/djangocms#readme",
+  "devDependencies": {
+    "vue": "^2.4.2",
+    "webpack": "^3.5.5",
+    "webpack-bundle-tracker": "^0.2.0"
+  }
+}
