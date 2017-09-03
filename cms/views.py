@@ -35,6 +35,7 @@ class BookList(ListView):
         return self.render_to_response(context)
 
 
+@login_required
 def book_edit(request, book_id=None):
     """書籍の編集"""
     if book_id:   # book_id が指定されている (修正時)
