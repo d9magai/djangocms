@@ -14,7 +14,7 @@ from .serializer import BookSerializer, ImpressionSerializer
 class BookList(ListView):
     context_object_name = 'books'
     template_name = 'cms/book_list.html'
-    pagination = 3
+    paginate_by = 2  # １ページは最大2件ずつでページングする
 
     def get(self, request, *args, **kwargs):
         books = Book.objects.all().order_by('id')
