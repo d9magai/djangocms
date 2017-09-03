@@ -4,7 +4,7 @@ from django.views.generic.list import ListView
 from cms.models import Book, Impression
 from cms.forms import BookForm, ImpressionForm
 import django_filters
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, permissions
 from .models import Book, Impression
 from .serializer import BookSerializer, ImpressionSerializer
 
@@ -86,7 +86,9 @@ def impression_del(request, book_id, impression_id):
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
     serializer_class = BookSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     
 class ImpressionViewSet(viewsets.ModelViewSet):
     queryset = Impression.objects.all()
     serializer_class = ImpressionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
