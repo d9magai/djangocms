@@ -3,6 +3,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_jwt.compat import get_user_model
 from rest_framework_jwt.settings import api_settings
+from django.test import TestCase
+from cms.models import Book
 
 
 class CmsTest(APITestCase):
@@ -64,3 +66,14 @@ class CmsTest(APITestCase):
         # DELETE
         response = self.client.delete(self.url + '1/', HTTP_AUTHORIZATION=self.auth)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_is_empty(self):
+        saved_books = Book.objects.all()
+        self.assertEqual(saved_books.count(), 0)
+
+    def test_is_not_empty(self):
+        book = Book()
+        book.save()
+        saved_books = Book.objects.all()
+        self.assertEqual(saved_books.count(), 1)
+        book.delete()
