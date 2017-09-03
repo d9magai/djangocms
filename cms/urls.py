@@ -9,6 +9,7 @@ from .views import BookViewSet, ImpressionViewSet
 
 urlpatterns = [
     url(r'^redirect/$', views.redirect, name='redirect'),
+    url(r'^index$', views.index, name='index'),
     url(
         r'^login/$',
         auth_views.login,
