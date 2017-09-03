@@ -1,4 +1,5 @@
-from django.conf.urls import url
+from django.conf.urls import include, url
+from django.contrib.auth import views as auth_views
 from rest_framework import routers
 
 from cms import views
@@ -7,6 +8,19 @@ from .views import BookViewSet, ImpressionViewSet
 
 
 urlpatterns = [
+    url(r'^redirect/$', views.redirect, name='redirect'),
+    url(
+        r'^login/$',
+        auth_views.login,
+        {'template_name': 'cms/login.html'},
+        name='login'
+    ),
+    url(
+        r'^logout/$',
+        auth_views.logout,
+        {'template_name': 'cms/logout.html'},
+        name='logout'
+    ),
     # 書籍
     url(r'^book/$', views.BookList.as_view(), name='book_list'),   # 一覧
     url(r'^book/add/$', views.book_edit, name='book_add'),  # 登録

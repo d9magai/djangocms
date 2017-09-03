@@ -1,5 +1,7 @@
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.decorators import method_decorator
 from django.views.generic.list import ListView
 import django_filters
 from rest_framework import viewsets, filters, permissions
@@ -11,6 +13,16 @@ from .models import Book, Impression
 from .serializer import BookSerializer, ImpressionSerializer
 
 
+def index(request):
+    return render(request, 'cms/index.html')
+
+
+@login_required
+def redirect(request):
+    return render(request, 'cms/redirect.html')
+
+
+@method_decorator(login_required, name='dispatch')
 class BookList(ListView):
     context_object_name = 'books'
     template_name = 'cms/book_list.html'

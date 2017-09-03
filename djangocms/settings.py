@@ -149,3 +149,5 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, "static"),
 )
+LOGIN_URL = '/cms/login/'  # ログイン画面のURL
+LOGIN_REDIRECT_URL = '/cms/redirect/'  # /loginに直接アクセスした場合のリダイレクト
