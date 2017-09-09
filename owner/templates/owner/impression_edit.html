@@ -6,9 +6,9 @@
 {% block content %}
     <h3 class="page-header">感想の編集</h3>
     {% if impression_id %}
-    <form action="{% url 'cms:impression_mod' book_id=book_id impression_id=impression_id %}" method="post" class="form-horizontal" role="form">
+    <form action="{% url 'owner:impression_mod' book_id=book_id impression_id=impression_id %}" method="post" class="form-horizontal" role="form">
     {% else %}
-    <form action="{% url 'cms:impression_add' book_id=book_id %}" method="post" class="form-horizontal" role="form">
+    <form action="{% url 'owner:impression_add' book_id=book_id %}" method="post" class="form-horizontal" role="form">
     {% endif %}
       {% csrf_token %}
       {{ form|bootstrap_horizontal }}
@@ -18,5 +18,5 @@
         </div>
       </div>
     </form>
-    <a href="{% url 'cms:impression_list' book_id=book_id %}" class="btn btn-default btn-sm">戻る</a>
+    <a href="{% url 'owner:impression_list' book_id=book_id %}" class="btn btn-default btn-sm">戻る</a>
 {% endblock content %}

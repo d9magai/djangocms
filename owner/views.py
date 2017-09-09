@@ -1,10 +1,13 @@
 from __future__ import absolute_import
+
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.decorators import method_decorator
 from django.views.generic import FormView
 from django.views.generic.list import ListView
+
 from .forms import LoginForm, BookForm, ImpressionForm
 from .models import Book, Impression
 
@@ -52,6 +55,7 @@ class BookList(ListView):
         return self.render_to_response(context)
 
 
+@login_required(login_url='/owner/login/')
 def book_edit(request, book_id=None):
     """書籍の編集"""
     if book_id:   # book_id が指定されている (修正時)
@@ -72,6 +76,7 @@ def book_edit(request, book_id=None):
     return render(request, 'owner/book_edit.html', dict(form=form, book_id=book_id))
 
 
+@login_required(login_url='/owner/login/')
 def book_del(request, book_id):
     """書籍の削除"""
     book = get_object_or_404(Book, pk=book_id)
