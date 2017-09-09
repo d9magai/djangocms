@@ -26,4 +26,5 @@ urlpatterns = [
     url(r'^cms/', include('cms.urls', namespace='cms')),
     url(r'^api/', include(cms_router.urls)),
     url(r'^api-auth/', obtain_jwt_token),
+    url(r'^owner/', include('owner.urls')),
 ]
