@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse_lazy
+from django.core.urlresolvers import reverse_lazy, reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView
@@ -17,10 +17,21 @@ class LoginView(FormView):
     success_url = reverse_lazy('owner:mypage')
     template_name = 'owner/login.html'
 
+    def get_success_url(self):
+        # here method should be GET or POST.
+        next_url = self.request.POST.get('next', None)
+        if next_url:
+            # you can include some query strings as well
+            return "%s" % (next_url)
+        else:
+            return reverse('owner:mypage')  # what url you wish to return
+
     def form_valid(self, form):
         username = form.cleaned_data['username']
         password = form.cleaned_data['password']
         user = authenticate(username=username, password=password)
+        next_url = self.request.GET.get('next', None)
+        n = self.request.GET.get('next', '/')
 
         if user is not None and user.is_active:
             login(self.request, user)
@@ -43,10 +54,15 @@ def redirect(request):
     return render(request, 'owner/redirect.html')
 
 
+@method_decorator(login_required(login_url='owner:login'), name='dispatch')
 class BookList(ListView):
     context_object_name = 'books'
     template_name = 'owner/book_list.html'
     paginate_by = 2  # １ページは最大2件ずつでページングする
+    login_url = 'owner:login'
+
+    def dispatch(self, *args, **kwargs):
+        return super(BookList,  self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         books = Book.objects.all().order_by('id')
