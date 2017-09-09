@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy, reverse
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.generic import FormView
@@ -85,7 +86,7 @@ def book_edit(request, book_id=None):
         if form.is_valid():    # フォームのバリデーション
             book = form.save(commit=False)
             book.save()
-            return redirect('owner:book_list')
+            return HttpResponseRedirect(reverse('owner:book_list'))
     else:    # GET の時
         form = BookForm(instance=book)  # book インスタンスからフォームを作成
 
@@ -97,7 +98,7 @@ def book_del(request, book_id):
     """書籍の削除"""
     book = get_object_or_404(Book, pk=book_id)
     book.delete()
-    return redirect('owner:book_list')
+    return HttpResponseRedirect(reverse('owner:book_list'))
 
 
 class ImpressionList(ListView):
@@ -131,7 +132,7 @@ def impression_edit(request, book_id, impression_id=None):
             impression = form.save(commit=False)
             impression.book = book  # この感想の、親の書籍をセット
             impression.save()
-            return redirect('owner:impression_list', book_id=book_id)
+            return HttpResponseRedirect(reverse('owner:impression_list', kwargs={'book_id': book_id}))
     else:    # GET の時
         # impression インスタンスからフォームを作成
         form = ImpressionForm(instance=impression)
@@ -145,4 +146,4 @@ def impression_del(request, book_id, impression_id):
     """感想の削除"""
     impression = get_object_or_404(Impression, pk=impression_id)
     impression.delete()
-    return redirect('owner:impression_list', book_id=book_id)
+    return HttpResponseRedirect(reverse('owner:impression_list', kwargs={'book_id': book_id}))
