@@ -1,9 +1,12 @@
 from django.conf.urls import include, url
 from django.contrib.auth import views as auth_views
-from owner import views 
- 
+
+from owner import views
+from owner.views import LogoutView
+
+
 app_name = 'owner'
- 
+
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^mypage/$', views.mypage, name='mypage'),
@@ -14,10 +17,5 @@ urlpatterns = [
         {'template_name': 'owner/login.html'},
         name='login'
     ),
-    url(
-        r'^logout/$',
-        auth_views.logout,
-        {'template_name': 'owner/logout.html'},
-        name='logout'
-    ),
+    url(r'^logout/$', LogoutView.as_view(), name='logout'),
 ]
