@@ -22,6 +22,23 @@ class LogoutView(RedirectView):
         return super(LogoutView, self).dispatch(request, *args, **kwargs)
 
 
+class LoginView(RedirectView):
+
+    permanent = False
+
+    def get_redirect_url(self):
+        return reverse('owner:index')
+
+    def dispatch(self, request, *args, **kwargs):
+        try:
+            login(request)
+        except:
+            # if we can't log the user out, it probably means they we're not
+            # logged-in to begin with, so we do nothing
+            pass
+        return super(LoginView, self).dispatch(request, *args, **kwargs)
+
+
 def index(request):
     return render(request, 'owner/index.html')
 

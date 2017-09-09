@@ -2,7 +2,7 @@ from django.conf.urls import include, url
 from django.contrib.auth import views as auth_views
 
 from owner import views
-from owner.views import LogoutView
+from owner.views import LogoutView, LoginView
 
 
 app_name = 'owner'
@@ -13,8 +13,7 @@ urlpatterns = [
     url(r'^redirect/$', views.redirect, name='redirect'),
     url(
         r'^login/$',
-        auth_views.login,
-        {'template_name': 'owner/login.html'},
+        LoginView.as_view(),
         name='login'
     ),
     url(r'^logout/$', LogoutView.as_view(), name='logout'),
