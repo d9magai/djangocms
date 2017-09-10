@@ -63,7 +63,7 @@ class BookList(ListView):
     login_url = 'owner:login'
 
     def dispatch(self, *args, **kwargs):
-        return super(BookList,  self).dispatch(*args, **kwargs)
+        return super(BookList, self).dispatch(*args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         books = Book.objects.all().order_by('id')
@@ -101,6 +101,7 @@ def book_del(request, book_id):
     return HttpResponseRedirect(reverse('owner:book_list'))
 
 
+@method_decorator(login_required(login_url='owner:login'), name='dispatch')
 class ImpressionList(ListView):
     """感想の一覧"""
     context_object_name = 'impressions'
@@ -117,6 +118,7 @@ class ImpressionList(ListView):
         return self.render_to_response(context)
 
 
+@login_required(login_url='/owner/login/')
 def impression_edit(request, book_id, impression_id=None):
     """感想の編集"""
     book = get_object_or_404(Book, pk=book_id)  # 親の書籍を読む
@@ -142,6 +144,7 @@ def impression_edit(request, book_id, impression_id=None):
                   dict(form=form, book_id=book_id, impression_id=impression_id))
 
 
+@login_required(login_url='/owner/login/')
 def impression_del(request, book_id, impression_id):
     """感想の削除"""
     impression = get_object_or_404(Impression, pk=impression_id)
