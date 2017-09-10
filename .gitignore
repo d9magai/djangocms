@@ -1,3 +1,5 @@
+settings_local.py
+
 static/admin/
 static/rest_framework/
 
