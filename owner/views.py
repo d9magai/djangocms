@@ -1,13 +1,16 @@
 from __future__ import absolute_import
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView
 from django.views.generic.list import ListView
+import json
 
 from .forms import LoginForm, BookForm, ImpressionForm
 from .models import Book, Impression
@@ -150,3 +153,23 @@ def impression_del(request, book_id, impression_id):
     impression = get_object_or_404(Impression, pk=impression_id)
     impression.delete()
     return HttpResponseRedirect(reverse('owner:impression_list', kwargs={'book_id': book_id}))
+
+
+@login_required(login_url='/owner/login/')
+@csrf_exempt
+def policies(request):
+    size = request.POST['size']
+    content_type = request.POST['content_type']
+    signature = 'sig'
+    policy = 'po'
+    key = 'key'
+    array = {
+        "url": "https://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
+        'form': {
+            'AWSAccessKeyId': settings.AWS_ACCESS_KEY_ID,
+            'signature': signature,
+            'policy': policy,
+            'key': key
+        }
+    }
+    return JsonResponse(array)
