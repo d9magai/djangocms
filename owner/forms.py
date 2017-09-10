@@ -1,6 +1,22 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, ButtonHolder, Submit
 from django.contrib.auth.forms import AuthenticationForm
+from django.forms import ModelForm
+from cms.models import Book, Impression
+
+
+class BookForm(ModelForm):
+    """書籍のフォーム"""
+    class Meta:
+        model = Book
+        fields = ('name', 'publisher', 'page', )
+
+
+class ImpressionForm(ModelForm):
+    """感想のフォーム"""
+    class Meta:
+        model = Impression
+        fields = ('comment', )
 
 
 class LoginForm(AuthenticationForm):
