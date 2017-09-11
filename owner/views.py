@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from datetime import datetime, timedelta, timezone
 from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -11,6 +12,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView
 from django.views.generic.list import ListView
 import json
+import hmac
+import hashlib
 
 from .forms import LoginForm, BookForm, ImpressionForm
 from .models import Book, Impression
@@ -158,11 +161,24 @@ def impression_del(request, book_id, impression_id):
 @login_required(login_url='/owner/login/')
 @csrf_exempt
 def policies(request):
-    size = request.POST['size']
+    key = '%s/%s' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
     content_type = request.POST['content_type']
+    size = request.POST['size']
+    policy_document = json.dump({
+        'expiration': datetime.now(timezone('UTC')) + datetime.timedelta(minute=1),
+        'conditions': {
+            {'bucket': settings.S3_BUCKET},
+            {'key': key},
+            {'Content-Type': content_type},
+            {'content-length-range', size, size}
+        }
+    })
+    policy = policy_document.encode('base64')
+
+    # signature = Base64.encode64(OpenSSL::HMAC.digest(OpenSSL::Digest::Digest.new('sha1'),AWS_SECRET_KEY, policy)).gsub("\n", '')
+
     signature = 'sig'
     policy = 'po'
-    key = 'key'
     array = {
         "url": "https://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
         'form': {
