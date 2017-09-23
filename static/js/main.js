@@ -34,6 +34,7 @@ $(function() {
             console.log( 'interactive... '+xhr.responseText.length+' bytes.' );
             break;
         case 4: // データ受信完了.
+            console.log(xhr.responseText);
             if( xhr.status == 200 || xhr.status == 304 ) {
                 var data = xhr.responseText; // responseXML もあり
                 console.log( 'COMPLETE! :'+data );
@@ -43,6 +44,9 @@ $(function() {
             break;
     }
 };
+      xhr.onerror = function (e) {
+                console.error(xhr.statusText);
+      };
       xhr.open('POST', data.url, true)
       xhr.send(fd);
     })
