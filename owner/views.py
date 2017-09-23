@@ -15,7 +15,6 @@ from django.views.generic.list import ListView
 import hashlib
 import hmac
 import json
-import urllib.parse
 
 from .forms import LoginForm, BookForm, ImpressionForm
 from .models import Book, Impression
@@ -164,11 +163,11 @@ def sign(key, msg):
     return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
 
 
-def getSignatureKey(key, dateStamp, regionName, serviceName):
-    kDate = sign(("AWS4" + key).encode("utf-8"), dateStamp)
+def getSignatureKey(key, date_stamp, regionName, serviceName):
+    kDate = sign(('AWS4' + key).encode('utf-8'), date_stamp)
     kRegion = sign(kDate, regionName)
     kService = sign(kRegion, serviceName)
-    kSigning = sign(kService, "aws4_request")
+    kSigning = sign(kService, 'aws4_request')
     return kSigning
 
 
@@ -176,52 +175,43 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 @csrf_exempt
 def policies(request):
     key = '%s/%s' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
-
-    bucket = settings.S3_BUCKET
-    region = 'ap-northeast-1'
-    keyStart = key
-    acl = 'private'
-    accessKeyId = settings.AWS_ACCESS_KEY_ID
-    secret = settings.AWS_SECRET_ACCESS_KEY
-    dateString = datetime.now().strftime("%Y%m%d")  # Ymd format.
-    credential = '/'.join([accessKeyId, dateString, region, 's3/aws4_request'])
-    xAmzDate = dateString + 'T000000Z'
-    # Build policy.
+    content_type = request.POST['content_type']
+    size = request.POST['size']
+    t = datetime.utcnow()
     dict = {
-        # 5 minutes into the future
-        'expiration': (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        'expiration': (t + timedelta(minutes=1)).isoformat(),
         'conditions': [
-            {'bucket': bucket},
-            {'acl': acl},
-            {'success_action_status': '201'},
-            {'x-requested-with': 'xhr'},
-            {'x-amz-algorithm': 'AWS4-HMAC-SHA256'},
-            {'x-amz-credential': credential},
-            {'x-amz-date': xAmzDate},
-            ['starts-with', '$key', keyStart],
-            ['starts-with', '$Content-Type', '']  # Accept all files.
-        ],
+            {'bucket': settings.S3_BUCKET},
+            {'key': key},
+            {'Content-Type': content_type},
+            ['content-length-range', size, size]
+        ]
     }
     policy_document = json.dumps(dict)
-    policyBase64 = base64.b64encode(policy_document.encode('utf-8'))
-    # Generate signature.
-    signature_key = getSignatureKey(settings.AWS_SECRET_ACCESS_KEY, dateString, region, 's3')
-    signature = hmac.new(signature_key, policyBase64, hashlib.sha256).hexdigest()
+    policy = base64.b64encode(policy_document.encode('utf-8'))
 
-    p = {
-        "url": "http://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
-        'bucket': bucket,
-        'region': region,
-        'keyStart': keyStart,
+    date_stamp = t.strftime('%Y%m%d')
+    service = 's3'
+    region = 'ap-northeast-1'
+    signing_key = getSignatureKey(settings.AWS_SECRET_ACCESS_KEY, date_stamp, region, service)
+    signature = hmac.new(signing_key, policy, hashlib.sha256).hexdigest()
+
+    algorithm = 'AWS4-HMAC-SHA256'
+    credential_scope = date_stamp + '/' + region + '/' + service + '/' + 'aws4_request'
+    signed_headers = 'content-type;host;x-amz-date;x-amz-target'
+    authorization_header = algorithm + ' ' + 'Credential=' + settings.AWS_ACCESS_KEY_ID + '/' + credential_scope + ', ' + 'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
+
+    amz_date = t.strftime('%Y%m%dT%H%M%SZ')
+    array = {
+        "url": "https://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
         'form': {
+            'AWSAccessKeyId': settings.AWS_ACCESS_KEY_ID,
+            'signature': signature,
+            'policy': policy.decode('utf-8'),
             'key': key,
-            'acl': acl,
-            'policy': policyBase64.decode('utf-8'),
-            'x-amz-algorithm': 'AWS4-HMAC-SHA256',
-            'x-amz-credential': credential,
-            'x-amz-date': xAmzDate,
-            'x-amz-signature': signature
+            'Content-Type': content_type,
+            'X-Amz-Date': amz_date,
+            'Authorization': authorization_header
         }
     }
-
-    return JsonResponse(p)
+    return JsonResponse(array)
