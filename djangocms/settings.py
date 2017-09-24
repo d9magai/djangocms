@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+import settings_local
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -152,3 +153,7 @@ STATICFILES_DIRS = (
 )
 
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+S3_BUCKET = settings_local.S3_BUCKET
+AWS_ACCESS_KEY_ID = settings_local.AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = settings_local.AWS_SECRET_ACCESS_KEY

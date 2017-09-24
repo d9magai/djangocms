@@ -1,13 +1,21 @@
 from __future__ import absolute_import
 
+import base64
+from datetime import datetime, timedelta, timezone
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse_lazy, reverse
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import FormView
 from django.views.generic.list import ListView
+import hashlib
+import hmac
+import json
+import urllib.parse
 
 from .forms import LoginForm, BookForm, ImpressionForm
 from .models import Book, Impression
@@ -150,3 +158,65 @@ def impression_del(request, book_id, impression_id):
     impression = get_object_or_404(Impression, pk=impression_id)
     impression.delete()
     return HttpResponseRedirect(reverse('owner:impression_list', kwargs={'book_id': book_id}))
+
+
+def sign(key, msg):
+    return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
+
+
+def getSignatureKey(key, dateStamp, regionName, serviceName):
+    kDate = sign(("AWS4" + key).encode("utf-8"), dateStamp)
+    kRegion = sign(kDate, regionName)
+    kService = sign(kRegion, serviceName)
+    kSigning = sign(kService, "aws4_request")
+    return kSigning
+
+
+@login_required(login_url='/owner/login/')
+@csrf_exempt
+def policies(request):
+
+    bucket = settings.S3_BUCKET
+    region = 'ap-northeast-1'
+    keyStart = '%s/%s.jpg' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
+    acl = 'private'
+    accessKeyId = settings.AWS_ACCESS_KEY_ID
+    secret = settings.AWS_SECRET_ACCESS_KEY
+    dateString = datetime.now().strftime("%Y%m%d")  # Ymd format.
+    credential = '/'.join([accessKeyId, dateString, region, 's3/aws4_request'])
+    xAmzDate = dateString + 'T000000Z'
+    # Build policy.
+    dict = {
+        # 1 minutes into the future
+        'expiration': (datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        'conditions': [
+            {'bucket': bucket},
+            {'acl': acl},
+            {'x-amz-algorithm': 'AWS4-HMAC-SHA256'},
+            {'x-amz-credential': credential},
+            {'x-amz-date': xAmzDate},
+            ['starts-with', '$key', keyStart],
+        ],
+    }
+    policy_document = json.dumps(dict)
+    policyBase64 = base64.b64encode(policy_document.encode('utf-8'))
+    # Generate signature.
+    signature_key = getSignatureKey(settings.AWS_SECRET_ACCESS_KEY, dateString, region, 's3')
+    signature = hmac.new(signature_key, policyBase64, hashlib.sha256).hexdigest()
+
+    res = {
+        "url": 'https://s3-ap-northeast-1.amazonaws.com/%s' % settings.S3_BUCKET,
+        'bucket': bucket,
+        'region': region,
+        'keyStart': keyStart,
+        'form': {
+            'key': keyStart,
+            'acl': acl,
+            'policy': policyBase64.decode('utf-8'),
+            'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+            'x-amz-credential': credential,
+            'x-amz-date': xAmzDate,
+            'x-amz-signature': signature
+        }
+    }
+    return JsonResponse(res)

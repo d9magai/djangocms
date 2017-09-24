@@ -30,4 +30,6 @@ urlpatterns = [
         views.impression_edit, name='impression_mod'),  # 修正
     url(r'^impression/del/(?P<book_id>\d+)/(?P<impression_id>\d+)/$',
         views.impression_del, name='impression_del'),   # 削除
+
+    url(r'^policies/$', views.policies, name='policies'),
 ]
