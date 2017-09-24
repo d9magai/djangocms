@@ -175,11 +175,10 @@ def getSignatureKey(key, dateStamp, regionName, serviceName):
 @login_required(login_url='/owner/login/')
 @csrf_exempt
 def policies(request):
-    key = '%s/%s' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
 
     bucket = settings.S3_BUCKET
     region = 'ap-northeast-1'
-    keyStart = key
+    keyStart = '%s/%s.jpg' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
     acl = 'private'
     accessKeyId = settings.AWS_ACCESS_KEY_ID
     secret = settings.AWS_SECRET_ACCESS_KEY
@@ -188,18 +187,15 @@ def policies(request):
     xAmzDate = dateString + 'T000000Z'
     # Build policy.
     dict = {
-        # 5 minutes into the future
-        'expiration': (datetime.now() + timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+        # 1 minutes into the future
+        'expiration': (datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z"),
         'conditions': [
             {'bucket': bucket},
             {'acl': acl},
-            {'success_action_status': '201'},
-            {'x-requested-with': 'xhr'},
             {'x-amz-algorithm': 'AWS4-HMAC-SHA256'},
             {'x-amz-credential': credential},
             {'x-amz-date': xAmzDate},
             ['starts-with', '$key', keyStart],
-            ['starts-with', '$Content-Type', '']  # Accept all files.
         ],
     }
     policy_document = json.dumps(dict)
@@ -208,13 +204,13 @@ def policies(request):
     signature_key = getSignatureKey(settings.AWS_SECRET_ACCESS_KEY, dateString, region, 's3')
     signature = hmac.new(signature_key, policyBase64, hashlib.sha256).hexdigest()
 
-    p = {
-        "url": "http://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
+    res = {
+        "url": 'https://s3-ap-northeast-1.amazonaws.com/%s' % settings.S3_BUCKET,
         'bucket': bucket,
         'region': region,
         'keyStart': keyStart,
         'form': {
-            'key': key,
+            'key': keyStart,
             'acl': acl,
             'policy': policyBase64.decode('utf-8'),
             'x-amz-algorithm': 'AWS4-HMAC-SHA256',
@@ -223,5 +219,4 @@ def policies(request):
             'x-amz-signature': signature
         }
     }
-
-    return JsonResponse(p)
+    return JsonResponse(res)
