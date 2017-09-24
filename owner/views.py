@@ -174,44 +174,27 @@ def getSignatureKey(key, date_stamp, regionName, serviceName):
 @login_required(login_url='/owner/login/')
 @csrf_exempt
 def policies(request):
-    key = '%s/%s' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
-    content_type = request.POST['content_type']
-    size = request.POST['size']
-    t = datetime.utcnow()
-    dict = {
-        'expiration': (t + timedelta(minutes=1)).isoformat(),
-        'conditions': [
-            {'bucket': settings.S3_BUCKET},
-            {'key': key},
-            {'Content-Type': content_type},
-            ['content-length-range', size, size]
-        ]
-    }
-    policy_document = json.dumps(dict)
-    policy = base64.b64encode(policy_document.encode('utf-8'))
+    policy = ''\
+        '{"expiration": "%s",'\
+        '  "conditions": ['\
+        '    {"bucket": "%s"},'\
+        '    {"key": "%s"},'\
+        '  ]'\
+        '}'\
 
-    date_stamp = t.strftime('%Y%m%d')
-    service = 's3'
-    region = 'ap-northeast-1'
-    signing_key = getSignatureKey(settings.AWS_SECRET_ACCESS_KEY, date_stamp, region, service)
-    signature = hmac.new(signing_key, policy, hashlib.sha256).hexdigest()
-
-    algorithm = 'AWS4-HMAC-SHA256'
-    credential_scope = date_stamp + '/' + region + '/' + service + '/' + 'aws4_request'
-    signed_headers = 'content-type;host;x-amz-date;x-amz-target'
-    authorization_header = algorithm + ' ' + 'Credential=' + settings.AWS_ACCESS_KEY_ID + '/' + credential_scope + ', ' + 'SignedHeaders=' + signed_headers + ', ' + 'Signature=' + signature
-
-    amz_date = t.strftime('%Y%m%dT%H%M%SZ')
+    key = '%s/%s.jpg' % (request.user.id, datetime.now().strftime("%Y%m%d%H%M%S"))
+    s = (policy % ((datetime.now() + timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M:%S.000Z"), settings.S3_BUCKET, key)).replace("\n", "").encode('ascii')
+    private_key = settings.AWS_SECRET_ACCESS_KEY
+    policy = base64.b64encode(s)
+    signature = base64.b64encode(hmac.new(private_key.encode('ascii'), policy, hashlib.sha1).digest())
+    access_key = settings.AWS_ACCESS_KEY_ID
     array = {
-        "url": "https://" + settings.S3_BUCKET + ".s3.amazonaws.com/",
+        "url": 'https://s3-ap-northeast-1.amazonaws.com/%s' % settings.S3_BUCKET,
         'form': {
             'AWSAccessKeyId': settings.AWS_ACCESS_KEY_ID,
-            'signature': signature,
-            'policy': policy.decode('utf-8'),
+            'signature': signature.decode('ascii'),
+            'policy': policy.decode('ascii'),
             'key': key,
-            'Content-Type': content_type,
-            'X-Amz-Date': amz_date,
-            'Authorization': authorization_header
         }
     }
     return JsonResponse(array)
