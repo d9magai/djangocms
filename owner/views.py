@@ -49,6 +49,7 @@ class LoginView(FormView):
             return self.form_invalid(form)
 
 
+@login_required(login_url='/owner/login/')
 def index(request):
     return render(request, 'owner/index.html')
 
