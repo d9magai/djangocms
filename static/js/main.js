@@ -1,5 +1,9 @@
 $(function() {
   $('#inputFile').change(function(e) {
+    var files = e.target.files;
+    for (var i = 0; i < files.length; i++) {
+      console.log(files[i]);
+    }
     var file = e.target.files[0];
     console.log(file.name)
     $.ajax({
